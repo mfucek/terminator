@@ -424,7 +424,11 @@
             ta.addEventListener('input', () => autoResize(ta, 1));
             // Enter to save, Option/Alt+Enter for newline
             ta.addEventListener('keydown', (e) => {
-              if (e.key === 'Enter') {
+              if (e.key === 'Escape') {
+                  e.preventDefault();
+                  editingId = null;
+                  render();
+                } else if (e.key === 'Enter') {
                 if (e.altKey) {
                   e.preventDefault();
                   const start = ta.selectionStart;
@@ -444,54 +448,60 @@
         return;
       }
 
-      const textSpan = document.createElement('span');
-      textSpan.className = 'task-text';
-      textSpan.textContent = task.text;
-      if (status !== 'done') {
-        textSpan.style.cursor = 'pointer';
-        textSpan.addEventListener('click', () => {
+      if (status === 'todo') {
+        li.style.cursor = 'pointer';
+        li.addEventListener('click', () => {
           editingId = task.id;
           render();
         });
+      } else if (status === 'doing') {
+        li.style.cursor = 'pointer';
+        li.addEventListener('click', () => {
+          vscode.postMessage({ command: 'focusTerminal', id: task.id });
+        });
       }
+
+      const textSpan = document.createElement('span');
+      textSpan.className = 'task-text';
+      textSpan.textContent = task.text;
       li.appendChild(textSpan);
 
       const actions = document.createElement('span');
       actions.className = 'task-actions';
 
       if (status === 'todo') {
-        let sendQuick = false;
+        let sendPicker = false;
         const sendBtn = actionBtn('▶', 'Send to terminal', () => {});
         sendBtn.addEventListener('mousedown', (e) => {
           if (e.button === 2 || (e.button === 0 && e.metaKey)) {
             e.preventDefault();
             e.stopPropagation();
-            sendQuick = true;
-            vscode.postMessage({ command: 'sendToActiveTerminal', id: task.id });
+            sendPicker = true;
+            showTerminalPicker(task.id, sendBtn);
           }
         });
         sendBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          if (sendQuick) { sendQuick = false; return; }
-          showTerminalPicker(task.id, sendBtn);
+          if (sendPicker) { sendPicker = false; return; }
+          vscode.postMessage({ command: 'sendToActiveTerminal', id: task.id });
         });
         sendBtn.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); });
         actions.appendChild(sendBtn);
       } else if (status === 'doing') {
-        let resendQuick = false;
+        let resendPicker = false;
         const resendBtn = actionBtn('▶', 'Resend to terminal', () => {});
         resendBtn.addEventListener('mousedown', (e) => {
           if (e.button === 2 || (e.button === 0 && e.metaKey)) {
             e.preventDefault();
             e.stopPropagation();
-            resendQuick = true;
-            vscode.postMessage({ command: 'sendToActiveTerminal', id: task.id });
+            resendPicker = true;
+            showTerminalPicker(task.id, resendBtn);
           }
         });
         resendBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          if (resendQuick) { resendQuick = false; return; }
-          showTerminalPicker(task.id, resendBtn);
+          if (resendPicker) { resendPicker = false; return; }
+          vscode.postMessage({ command: 'sendToActiveTerminal', id: task.id });
         });
         resendBtn.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); });
         actions.appendChild(resendBtn);

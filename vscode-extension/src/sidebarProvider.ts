@@ -6,6 +6,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'terminator.taskView';
   private view?: vscode.WebviewView;
   private changeListener?: vscode.Disposable;
+  private taskTerminals = new Map<string, vscode.Terminal>();
 
   constructor(
     private readonly extensionUri: vscode.Uri,
@@ -64,6 +65,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           }
           if (!terminal) { return; }
           this.terminalService.sendText(terminal, task.text);
+          this.taskTerminals.set(msg.id, terminal);
           if (task.status === 'todo') {
             this.taskStore.updateStatus(msg.id, 'doing');
           }
@@ -76,9 +78,16 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           const active = vscode.window.activeTerminal;
           const terminal = active || this.terminalService.createTerminal();
           this.terminalService.sendText(terminal, activeTask.text);
+          this.taskTerminals.set(msg.id, terminal);
           if (activeTask.status === 'todo') {
             this.taskStore.updateStatus(msg.id, 'doing');
           }
+          break;
+        }
+
+        case 'focusTerminal': {
+          const terminal = this.taskTerminals.get(msg.id);
+          if (terminal) { terminal.show(false); }
           break;
         }
 
