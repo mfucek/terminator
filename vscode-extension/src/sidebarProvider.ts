@@ -142,31 +142,37 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     <button id="add-btn" class="add-btn">Add Task</button>
   </div>
 
-  <div class="section" id="todo-section">
-    <div class="section-header">
-      <span class="chevron">▸</span>
-      Todo
-      <span class="badge" id="todo-badge">0</span>
+  <div class="sections-container">
+    <div class="section" id="todo-section">
+      <div class="section-header">
+        <span class="chevron">▸</span>
+        Todo
+        <span class="badge" id="todo-badge">0</span>
+      </div>
+      <div class="section-body" id="todo-body"></div>
     </div>
-    <div class="section-body" id="todo-body"></div>
-  </div>
 
-  <div class="section" id="doing-section">
-    <div class="section-header">
-      <span class="chevron">▸</span>
-      Doing
-      <span class="badge" id="doing-badge">0</span>
-    </div>
-    <div class="section-body" id="doing-body"></div>
-  </div>
+    <div class="resize-handle" data-above="todo-section" data-below="doing-section"></div>
 
-  <div class="section" id="done-section">
-    <div class="section-header">
-      <span class="chevron">▸</span>
-      Done
-      <span class="badge" id="done-badge">0</span>
+    <div class="section" id="doing-section">
+      <div class="section-header">
+        <span class="chevron">▸</span>
+        Doing
+        <span class="badge" id="doing-badge">0</span>
+      </div>
+      <div class="section-body" id="doing-body"></div>
     </div>
-    <div class="section-body" id="done-body"></div>
+
+    <div class="resize-handle" data-above="doing-section" data-below="done-section"></div>
+
+    <div class="section" id="done-section">
+      <div class="section-header">
+        <span class="chevron">▸</span>
+        Done
+        <span class="badge" id="done-badge">0</span>
+      </div>
+      <div class="section-body" id="done-body"></div>
+    </div>
   </div>
 
   <script nonce="${nonce}" src="${jsUri}"></script>

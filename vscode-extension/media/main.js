@@ -70,6 +70,10 @@
       header.classList.toggle('collapsed');
       const body = header.nextElementSibling;
       if (body) { body.classList.toggle('hidden'); }
+      // Clear any inline flex overrides so CSS rules recalculate
+      document.querySelectorAll('.section').forEach(s => {
+        /** @type {HTMLElement} */ (s).style.flex = '';
+      });
     });
   });
 
@@ -560,6 +564,72 @@
       render();
     }
   });
+
+  // Resize handles
+  (function initResizeHandles() {
+    /** @type {HTMLElement | null} */
+    let activeHandle = null;
+    let startY = 0;
+    let startAboveHeight = 0;
+    let startBelowHeight = 0;
+    /** @type {HTMLElement | null} */
+    let aboveSection = null;
+    /** @type {HTMLElement | null} */
+    let belowSection = null;
+
+    document.querySelectorAll('.resize-handle').forEach(handle => {
+      handle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        const h = /** @type {HTMLElement} */ (handle);
+        activeHandle = h;
+        h.classList.add('active');
+
+        const aboveId = h.dataset.above;
+        const belowId = h.dataset.below;
+        aboveSection = document.getElementById(aboveId);
+        belowSection = document.getElementById(belowId);
+        if (!aboveSection || !belowSection) { return; }
+
+        startY = e.clientY;
+        startAboveHeight = aboveSection.getBoundingClientRect().height;
+        startBelowHeight = belowSection.getBoundingClientRect().height;
+
+        document.body.style.cursor = 'row-resize';
+        document.body.style.userSelect = 'none';
+      });
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!activeHandle || !aboveSection || !belowSection) { return; }
+      const delta = e.clientY - startY;
+      const minHeight = 30;
+
+      let newAbove = startAboveHeight + delta;
+      let newBelow = startBelowHeight - delta;
+
+      if (newAbove < minHeight) {
+        newAbove = minHeight;
+        newBelow = startAboveHeight + startBelowHeight - minHeight;
+      }
+      if (newBelow < minHeight) {
+        newBelow = minHeight;
+        newAbove = startAboveHeight + startBelowHeight - minHeight;
+      }
+
+      aboveSection.style.flex = '0 0 ' + newAbove + 'px';
+      belowSection.style.flex = '0 0 ' + newBelow + 'px';
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (!activeHandle) { return; }
+      activeHandle.classList.remove('active');
+      activeHandle = null;
+      aboveSection = null;
+      belowSection = null;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    });
+  })();
 
   // Initial render
   render();
