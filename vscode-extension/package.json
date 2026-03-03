@@ -1,0 +1,72 @@
+{
+  "name": "terminator",
+  "displayName": "Terminator",
+  "description": "Task-oriented terminal control for VS Code",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "terminator-sidebar",
+          "title": "Terminator",
+          "icon": "media/terminator-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "terminator-sidebar": [
+        {
+          "id": "terminator.taskView",
+          "name": "Tasks",
+          "type": "webview"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "terminator.addTask",
+        "title": "Add Task",
+        "category": "Terminator"
+      },
+      {
+        "command": "terminator.sendToTerminal",
+        "title": "Send to Terminal",
+        "category": "Terminator"
+      },
+      {
+        "command": "terminator.completeTask",
+        "title": "Complete Task",
+        "category": "Terminator"
+      },
+      {
+        "command": "terminator.deleteTask",
+        "title": "Delete Task",
+        "category": "Terminator"
+      },
+      {
+        "command": "terminator.editTask",
+        "title": "Edit Task",
+        "category": "Terminator"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0"
+  }
+}

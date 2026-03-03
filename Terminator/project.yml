@@ -1,0 +1,32 @@
+name: Terminator
+options:
+  bundleIdPrefix: com.terminator
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "15.0"
+packages:
+  SwiftTerm:
+    url: https://github.com/migueldeicaza/SwiftTerm.git
+    from: "1.0.0"
+targets:
+  Terminator:
+    type: application
+    platform: macOS
+    sources:
+      - Terminator
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.terminator.app
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.developer-tools"
+        INFOPLIST_KEY_CFBundleDisplayName: Terminator
+        SWIFT_VERSION: "5.9"
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - package: SwiftTerm
+    entitlements:
+      path: Terminator/Terminator.entitlements
+      properties:
+        com.apple.security.app-sandbox: false
