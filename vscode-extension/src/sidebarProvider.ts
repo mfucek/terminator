@@ -5,14 +5,13 @@ import { TerminalService } from './terminalService';
 export class SidebarProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'terminator.taskView';
   private view?: vscode.WebviewView;
+  private changeListener?: vscode.Disposable;
 
   constructor(
     private readonly extensionUri: vscode.Uri,
     private readonly taskStore: TaskStore,
     private readonly terminalService: TerminalService,
-  ) {
-    this.taskStore.onDidChange(() => this.updateWebview());
-  }
+  ) {}
 
   resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -20,6 +19,16 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     _token: vscode.CancellationToken,
   ): void {
     this.view = webviewView;
+
+    // Dispose previous listener if the view is re-resolved
+    this.changeListener?.dispose();
+    this.changeListener = this.taskStore.onDidChange(() => this.updateWebview());
+
+    webviewView.onDidDispose(() => {
+      this.changeListener?.dispose();
+      this.changeListener = undefined;
+      this.view = undefined;
+    });
 
     webviewView.webview.options = {
       enableScripts: true,
@@ -56,6 +65,18 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           if (!terminal) { return; }
           this.terminalService.sendText(terminal, task.text);
           if (task.status === 'todo') {
+            this.taskStore.updateStatus(msg.id, 'doing');
+          }
+          break;
+        }
+
+        case 'sendToActiveTerminal': {
+          const activeTask = this.taskStore.getById(msg.id);
+          if (!activeTask) { return; }
+          const active = vscode.window.activeTerminal;
+          const terminal = active || this.terminalService.createTerminal();
+          this.terminalService.sendText(terminal, activeTask.text);
+          if (activeTask.status === 'todo') {
             this.taskStore.updateStatus(msg.id, 'doing');
           }
           break;

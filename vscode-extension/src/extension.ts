@@ -12,6 +12,8 @@ export function activate(context: vscode.ExtensionContext) {
     terminalService,
   );
 
+  context.subscriptions.push(taskStore);
+
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
       SidebarProvider.viewType,

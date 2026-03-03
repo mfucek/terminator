@@ -20,19 +20,47 @@
   const doneBadge = /** @type {HTMLElement} */ (document.getElementById('done-badge'));
   const doneSection = /** @type {HTMLElement} */ (document.getElementById('done-section'));
 
+  /**
+   * Auto-resize a textarea to fit its content within CSS min/max constraints.
+   * @param {HTMLTextAreaElement} textarea
+   * @param {number} [extraLines=0] - extra blank lines to add beyond content
+   */
+  function autoResize(textarea, extraLines) {
+    // Temporarily collapse to measure true scrollHeight
+    textarea.style.height = '0';
+    textarea.style.overflow = 'hidden';
+    const lineHeight = parseFloat(getComputedStyle(textarea).lineHeight) || (parseFloat(getComputedStyle(textarea).fontSize) * 1.4);
+    const contentHeight = textarea.scrollHeight + (extraLines || 0) * lineHeight;
+    textarea.style.height = contentHeight + 'px';
+    textarea.style.overflow = '';
+  }
+
+  // Auto-resize main input on typing
+  inputArea.addEventListener('input', () => autoResize(inputArea));
+
   // Add task
   addBtn.addEventListener('click', () => {
     const text = inputArea.value.trim();
     if (!text) { return; }
     vscode.postMessage({ command: 'addTask', text });
     inputArea.value = '';
+    autoResize(inputArea);
   });
 
-  // Ctrl/Cmd+Enter to add
+  // Enter to add task, Option/Alt+Enter for newline
   inputArea.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-      e.preventDefault();
-      addBtn.click();
+    if (e.key === 'Enter') {
+      if (e.altKey) {
+        e.preventDefault();
+        const start = inputArea.selectionStart;
+        const end = inputArea.selectionEnd;
+        inputArea.value = inputArea.value.substring(0, start) + '\n' + inputArea.value.substring(end);
+        inputArea.selectionStart = inputArea.selectionEnd = start + 1;
+        autoResize(inputArea);
+      } else if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        addBtn.click();
+      }
     }
   });
 
@@ -383,10 +411,31 @@
       if (editingId === task.id) {
         li.innerHTML = renderEditForm(task);
         ul.appendChild(li);
-        // Focus the textarea after render
+        // Focus the textarea after render and auto-resize
         requestAnimationFrame(() => {
-          const ta = li.querySelector('.edit-textarea');
-          if (ta) { /** @type {HTMLTextAreaElement} */ (ta).focus(); }
+          const ta = /** @type {HTMLTextAreaElement | null} */ (li.querySelector('.edit-textarea'));
+          if (ta) {
+            ta.focus();
+            autoResize(ta, 1);
+            ta.addEventListener('input', () => autoResize(ta, 1));
+            // Enter to save, Option/Alt+Enter for newline
+            ta.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter') {
+                if (e.altKey) {
+                  e.preventDefault();
+                  const start = ta.selectionStart;
+                  const end = ta.selectionEnd;
+                  ta.value = ta.value.substring(0, start) + '\n' + ta.value.substring(end);
+                  ta.selectionStart = ta.selectionEnd = start + 1;
+                  autoResize(ta, 1);
+                } else if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
+                  e.preventDefault();
+                  const saveBtn = li.querySelector('.edit-save-btn');
+                  if (saveBtn) { /** @type {HTMLButtonElement} */ (saveBtn).click(); }
+                }
+              }
+            });
+          }
         });
         return;
       }
@@ -407,18 +456,40 @@
       actions.className = 'task-actions';
 
       if (status === 'todo') {
+        let sendQuick = false;
         const sendBtn = actionBtn('▶', 'Send to terminal', () => {});
+        sendBtn.addEventListener('mousedown', (e) => {
+          if (e.button === 2 || (e.button === 0 && e.metaKey)) {
+            e.preventDefault();
+            e.stopPropagation();
+            sendQuick = true;
+            vscode.postMessage({ command: 'sendToActiveTerminal', id: task.id });
+          }
+        });
         sendBtn.addEventListener('click', (e) => {
           e.stopPropagation();
+          if (sendQuick) { sendQuick = false; return; }
           showTerminalPicker(task.id, sendBtn);
         });
+        sendBtn.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); });
         actions.appendChild(sendBtn);
       } else if (status === 'doing') {
+        let resendQuick = false;
         const resendBtn = actionBtn('▶', 'Resend to terminal', () => {});
+        resendBtn.addEventListener('mousedown', (e) => {
+          if (e.button === 2 || (e.button === 0 && e.metaKey)) {
+            e.preventDefault();
+            e.stopPropagation();
+            resendQuick = true;
+            vscode.postMessage({ command: 'sendToActiveTerminal', id: task.id });
+          }
+        });
         resendBtn.addEventListener('click', (e) => {
           e.stopPropagation();
+          if (resendQuick) { resendQuick = false; return; }
           showTerminalPicker(task.id, resendBtn);
         });
+        resendBtn.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); });
         actions.appendChild(resendBtn);
         actions.appendChild(actionBtn('✓', 'Complete task', () => {
           vscode.postMessage({ command: 'completeTask', id: task.id });
