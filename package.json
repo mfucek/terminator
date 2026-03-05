@@ -3,7 +3,7 @@
 	"displayName": "Terminator | Queue terminal tasks",
 	"publisher": "wireframe",
 	"description": "Task-oriented terminal control for VS Code",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/mfucek/terminator"

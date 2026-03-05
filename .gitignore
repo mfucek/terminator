@@ -1,13 +1,4 @@
-# macOS
-.DS_Store
-
-# Xcode
-Terminator/build/
-*.xcuserstate
-xcuserdata/
-
-# VS Code Extension
-vscode-extension/out/
-vscode-extension/node_modules/
-vscode-extension/.vscode-test/
+out/
+node_modules/
+.vscode-test/
 *.vsix

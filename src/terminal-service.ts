@@ -23,6 +23,12 @@ export class TerminalService {
 
 	sendText(terminal: vscode.Terminal, text: string): void {
 		terminal.show(true);
-		terminal.sendText(text);
+		// Send text without trailing newline, then send Enter separately.
+		// Using sendText(text, false) avoids appending \n which some
+		// interactive CLIs (like Claude Code) treat as a literal newline.
+		terminal.sendText(text, false);
+		vscode.commands.executeCommand('workbench.action.terminal.sendSequence', {
+			text: '\r',
+		});
 	}
 }
